@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#9a7952">
+<meta name="description" content="تطبيق متابعة المحاضرات والمهام الدراسية - يشتغل بدون إنترنت">
+<link rel="manifest" href="./manifest.json">
+<title>متابعتي الدراسية</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#faf7f1;color:#40372f;font-family:Arial,sans-serif}
+header{padding:22px 16px 14px;text-align:center}
+h1{margin:0 0 6px;font-size:27px}.sub{color:#8b7c70;font-size:14px}
+.wrap{max-width:650px;margin:auto;padding:0 14px 80px}
+.card{background:#fffdf9;border:1px solid #eee5d8;border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 3px 12px #00000008}
+.title{font-size:18px;font-weight:bold;margin-bottom:10px}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:#f4eee5;border-radius:30px;padding:7px 10px;font-size:12px}
+button{border:0;border-radius:12px;padding:10px 13px;background:#9a7952;color:white;font-weight:bold;cursor:pointer;transition:all .2s}
+button:active{transform:scale(.96)}
+button.light{background:#eee5d8;color:#55483d}
+button.danger{background:#d88980}
+button.success{background:#7cb342}
+input,textarea,select{width:100%;padding:11px;border:1px solid #ded3c5;border-radius:12px;background:white;font-size:14px;margin:5px 0 9px}
+textarea{min-height:70px;resize:vertical}
+.hidden{display:none}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.task{display:flex;align-items:flex-start;gap:9px;padding:10px 0;border-bottom:1px solid #eee7de}
+.task:last-child{border-bottom:0}.task input{width:20px;margin-top:3px}
+.task.done .txt{text-decoration:line-through;color:#9b928a}
+.date{font-size:12px;color:#8c7c70}.late{color:#bd5b51;font-weight:bold}.soon{color:#b17b28;font-weight:bold}
+.small{font-size:12px;color:#8d8178}
+.material{background:#fbf4e8;border-radius:14px;padding:11px;margin:8px 0}
+.material b{display:block;margin-bottom:5px}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;gap:7px;background:#fffdf9ee;border-top:1px solid #eee5d8;padding:8px;backdrop-filter:blur(8px);z-index:100}
+nav button{flex:1;background:#eee5d8;color:#55483d;font-size:12px}
+nav button.active{background:#9a7952;color:white}
+.empty{text-align:center;color:#9a8e83;padding:18px}
+.status-bar{background:#9a7952;color:white;padding:8px 14px;text-align:center;font-size:12px;border-radius:12px;margin-bottom:10px}
+.status-bar.offline{background:#d88980}
+</style>
+</head>
+<body>
+<header>
+<h1>📚 متابعتي الدراسية</h1>
+<div class="sub">أعرف عليّا إيه بدل ما الأيام تجرّي مني 🤍</div>
+<div id="statusBar" class="status-bar hidden"><span id="statusText">✅ متصلة بالإنترنت</span></div>
+</header>
+<div class="wrap">
+<section id="home">
+<div class="card"><div class="title">🔔 عليكِ دلوقتي</div><div id="todayBox" class="empty">مفيش حاجات متأخرة أو قريبة 🎉</div></div>
+<div class="card"><div class="title">📅 محاضراتك الجاية</div><div id="upcoming"></div></div>
+<div class="card"><div class="title">📚 موادي</div><div id="subjects"></div></div>
+</section>
+
+<section id="subjectPage" class="hidden">
+<div class="card"><div class="row"><button class="light" onclick="goHome()">← رجوع</button><div id="subjectTitle" class="title" style="margin:0"></div></div></div>
+<div class="card"><div class="title">➕ إضافة محاضرة / مهمة</div>
+<input id="lectureTitle" placeholder="مثلاً: محاضرة 3 أو حل شيت المحاضرة 2">
+<input id="lectureDate" type="date">
+<select id="lectureType">
+<option value="lecture">محاضرة</option>
+<option value="task">مهمة / شيت</option>
+<option value="revision">مراجعة</option>
+<option value="exam">امتحان</option>
+</select>
+<button onclick="addItem()">✅ إضافة</button></div>
+<div class="card"><div class="title">📝 متابعة المادة</div><div id="items"></div></div>
+<div class="card"><div class="title">⭐ مهم / متوقع في الامتحان</div><div class="small">هنا تسجلي سؤال أو نقطة الدكتور قال إنها مهمة أو هتيجي في الميد/الامتحان.</div>
+<textarea id="importantText" placeholder="مثلاً: سؤال المقارنة ده مهم — الدكتور قال هييجي في الميد"></textarea>
+<select id="importantTag">
+<option>مهم</option><option>هييجي في الميد</option><option>هييجي في الامتحان</option><option>سؤال متوقع</option><option>مراجعة</option>
+</select>
+<button onclick="addImportant()">💾 حفظ النقطة</button>
+<div id="importantList"></div></div>
+</section>
+
+<section id="settings" class="hidden">
+<div class="card"><div class="title">⚙️ أسماء المواد</div><div class="small">اكتبي أسماء موادك الخمسة مرة واحدة.</div><div id="subjectInputs"></div><button onclick="saveSubjects()">💾 حفظ الأسماء</button></div>
+<div class="card"><div class="title">📤 النسخ الاحتياطي</div><div class="small">احفظي نسخة من بياناتك أو استرجعيها في أي وقت.</div><button class="success" onclick="exportData()">📥 تحميل النسخة الاحتياطية</button><button class="light" onclick="importData()">📤 رفع نسخة محفوظة</button><input id="fileInput" type="file" accept=".json" class="hidden" onchange="handleFileImport(event)"></div>
+<div class="card"><div class="title">💾 بياناتك</div><div class="small">البيانات محفوظة على نفس الجهاز داخل المتصفح.</div><button class="danger" onclick="clearAll()">⚠️ مسح كل البيانات</button></div>
+</section>
+
+<nav>
+<button id="navHome" class="active" onclick="goHome()">🏠 الرئيسية</button>
+<button id="navSettings" onclick="showSettings()">⚙️ المواد</button>
+</nav>
+</div>
+
+<script>
+const KEY="study_tracker_v2";
+let data=JSON.parse(localStorage.getItem(KEY)||"null")||{
+  subjects:["المادة الأولى","المادة الثانية","المادة الثالثة","المادة الرابعة","المادة الخامسة"],
+  items:[],
+  important:[]
+};
+let currentSubject=0;
+
+function save(){localStorage.setItem(KEY,JSON.stringify(data));}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;","&gt;":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+function dateOnly(s){return new Date(s+"T00:00:00");}
+function daysFromToday(s){let a=new Date();a.setHours(0,0,0,0);let b=dateOnly(s);return Math.round((b-a)/86400000);}
+function status(item){if(item.done) return '<span>✅ تم</span>'; if(!item.date) return '<span>⬜ لسه</span>'; let d=daysFromToday(item.date); if(d<0) return '<span class="late">❌ متأخرة '+Math.abs(d)+' يوم</span>'; if(d===0) return '<span class="soon">🔔 عليكِ النهارده</span>'; if(d===1) return '<span class="soon">🔔 عليكِ بكرة</span>'; return '<span class="date">📅 '+item.date+'</span>';}
+function getTypeIcon(type){const icons={lecture:'📖',task:'📝',revision:'🔄',exam:'📋'};return icons[type]||'📝';}
+function goHome(){document.getElementById("home").classList.remove("hidden");document.getElementById("subjectPage").classList.add("hidden");document.getElementById("settings").classList.add("hidden");document.getElementById("navHome").classList.add("active");document.getElementById("navSettings").classList.remove("active");renderHome();}
+function showSettings(){document.getElementById("home").classList.add("hidden");document.getElementById("subjectPage").classList.add("hidden");document.getElementById("settings").classList.remove("hidden");document.getElementById("navHome").classList.remove("active");document.getElementById("navSettings").classList.add("active");document.getElementById("subjectInputs").innerHTML=data.subjects.map((s,i)=>`<input id="sub${i}" value="${esc(s)}" placeholder="المادة ${i+1}">`).join("");}
+function openSubject(i){currentSubject=i;document.getElementById("home").classList.add("hidden");document.getElementById("settings").classList.add("hidden");document.getElementById("subjectPage").classList.remove("hidden");document.getElementById("navHome").classList.remove("active");document.getElementById("navSettings").classList.remove("active");document.getElementById("subjectTitle").textContent="📖 "+data.subjects[i];renderSubject();}
+function renderHome(){let active=data.items.filter(x=>!x.done).sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999"));let urgent=active.filter(x=>x.date&&daysFromToday(x.date)<=1);document.getElementById("todayBox").innerHTML=urgent.length?urgent.map(x=>`<div class="task"><input type="checkbox" onchange="toggle(${x.id})"><div class="txt" style="flex:1"><b>${getTypeIcon(x.type)} ${esc(x.title)}</b><div class="small">${esc(data.subjects[x.subject])} · ${status(x)}</div></div></div>`).join(""):'مفيش حاجات متأخرة أو قريبة 🎉';let upcoming=active.slice(0,8);document.getElementById("upcoming").innerHTML=upcoming.length?upcoming.map(x=>`<div class="task"><input type="checkbox" onchange="toggle(${x.id})"><div class="txt" style="flex:1"><b>${getTypeIcon(x.type)} ${esc(x.title)}</b><div class="small">${esc(data.subjects[x.subject])} · ${status(x)}</div></div></div>`).join(""):'لسه مفيش محاضرات أو مهام مضافة.';document.getElementById("subjects").innerHTML=data.subjects.map((s,i)=>{let all=data.items.filter(x=>x.subject===i),done=all.filter(x=>x.done).length; return `<div class="card" style="margin:8px 0;padding:13px;cursor:pointer" onclick="openSubject(${i})"><b>📚 ${esc(s)}</b><div class="stats"><span class="pill">${all.length} حاجة</span><span class="pill">${done} تم</span><span class="pill">${all.length-done} لسه</span></div></div>`;}).join("");}
+function addItem(){let title=document.getElementById("lectureTitle").value.trim(),date=document.getElementById("lectureDate").value,type=document.getElementById("lectureType").value;if(!title){alert("اكتبي اسم الحاجة الأول ❤️");return;}data.items.push({id:Date.now(),subject:currentSubject,title,date,type,done:false});save();document.getElementById("lectureTitle").value="";document.getElementById("lectureDate").value="";renderSubject();renderHome();}
+function toggle(id){let x=data.items.find(a=>a.id===id);if(x)x.done=!x.done;save();renderHome();if(!document.getElementById("subjectPage").classList.contains("hidden"))renderSubject();}
+function deleteItem(id){data.items=data.items.filter(x=>x.id!==id);save();renderSubject();renderHome();}
+function renderSubject(){let list=data.items.filter(x=>x.subject===currentSubject).sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999"));document.getElementById("items").innerHTML=list.length?list.map(x=>`<div class="task ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggle(${x.id})"><div class="txt" style="flex:1"><b>${getTypeIcon(x.type)} ${esc(x.title)}</b><div class="small">${status(x)}</div></div><button class="danger" style="padding:6px 9px;font-size:12px" onclick="deleteItem(${x.id})">حذف</button></div>`).join(""):'لسه مفيش حاجات للمادة دي.';let imp=data.important.filter(x=>x.subject===currentSubject);document.getElementById("importantList").innerHTML=imp.length?imp.map(x=>`<div class="material"><b>⭐ ${esc(x.tag)}</b>${esc(x.text)}<button class="danger" style="margin-top:7px;padding:6px 9px;font-size:12px" onclick="deleteImportant(${x.id})">حذف</button></div>`).join(""):'<div class="empty">مفيش نقاط مهمة متسجلة.</div>';;}
+function addImportant(){let text=document.getElementById("importantText").value.trim(),tag=document.getElementById("importantTag").value;if(!text){alert("اكتبي السؤال أو النقطة المهمة ❤️");return;}data.important.push({id:Date.now(),subject:currentSubject,text,tag});save();document.getElementById("importantText").value="";renderSubject();}
+function deleteImportant(id){data.important=data.important.filter(x=>x.id!==id);save();renderSubject();}
+function saveSubjects(){data.subjects=[0,1,2,3,4].map(i=>document.getElementById("sub"+i).value.trim()||("المادة "+(i+1)));save();goHome();}
+function exportData(){const dataStr=JSON.stringify(data,null,2);const blob=new Blob([dataStr],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="study-backup.json";a.click();URL.revokeObjectURL(url);alert("✅ تم تحميل النسخة الاحتياطية!");}
+function importData(){document.getElementById("fileInput").click();}
+function handleFileImport(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=function(e){try{const imported=JSON.parse(e.target.result);if(imported.subjects && imported.items && imported.important){data=imported;save();alert("✅ تم استرجاع البيانات بنجاح!");goHome();}else{alert("❌ الملف غير صحيح!");}}catch(err){alert("❌ خطأ في قراءة الملف!");}};reader.readAsText(file);}
+function clearAll(){if(confirm("متأكدة؟ ده هيمسح كل المهام والنقط والأسماء.")){localStorage.removeItem(KEY);location.reload();}}
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(()=>console.log('SW registered')).catch(err=>console.log('SW failed',err));});}
+function updateOnlineStatus(){const bar=document.getElementById('statusBar');const text=document.getElementById('statusText');if(navigator.onLine){bar.classList.add('hidden');text.textContent='✅ متصلة بالإنترنت';}else{bar.classList.remove('hidden');text.textContent='📡 بتشتغلي بدون إنترنت';bar.classList.add('offline');}}
+window.addEventListener('online',updateOnlineStatus);window.addEventListener('offline',updateOnlineStatus);updateOnlineStatus();
+renderHome();
+</script>
+</body>
+</html>
